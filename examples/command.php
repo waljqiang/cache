@@ -9,8 +9,6 @@ try{
 	$e = $a->setMultiple(['ff' => 300,'ee' => 400]);
 	$m = $a->deleteMultiple(['ff','ee','mm']);
 	$l = $a->has('aa');
-	$o = $a->lpush('aaa',500);
-	$p = $a->rpop('aaa');
 	//$n = $a->clear();
 	var_dump($b);
 	var_dump($c);
@@ -19,8 +17,6 @@ try{
 	var_dump($e);
 	var_dump($m);
 	var_dump($l);
-	var_dump($o);
-	var_dump($p);
 	//var_dump($n);
 }catch(\Exception $e){
 	var_dump($e);
