@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/share.php';
 try{
-	$a = Nova\Cache\Cache::getInstance($config['type'],$config['parameters'],$config['options']);
+	$a = Nova\Cache\Cache::getInstance($config['type'],$config['parameters'],$config['options'],false);
 	$b = $a->set('aa',100);
 	$c = $a->get('aa');
 	$d = $a->set('dd',200);

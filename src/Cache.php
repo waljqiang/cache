@@ -30,18 +30,25 @@ class Cache{
 	protected $options;
 
 	/**
+	 * 缓存开关
+	 * @var boolean
+	 */
+	protected $switch=true;
+
+	/**
 	 * 缓存实例
 	 * @var array
 	 */
 	private static $_instance;
 
-	public static function getInstance($type,$parameters = [],$options = []){
+	public static function getInstance($type,$parameters = [],$options = [],$switch = true){
 		$guid = $type . self::to_guid_string($options);
 		if(!isset(self::$_instance[$guid])){
 			$cache = new Cache();
 			$cache->type = $type;
 			$cache->parameters = $parameters;
 			$cache->options = $options;
+			$cache->switch = $switch;
 			self::$_instance[$guid] = $cache->init();
 		}
 		return self::$_instance[$guid];
@@ -51,7 +58,7 @@ class Cache{
 		$class = strpos($this->type,'\\') ? $this->type : 'Nova\\Cache\\Driver\\' . ucwords(strtolower($this->type));
 		if(!class_exists($class))
 			throw new CacheException("No Driver",CacheException::NODRIVER);	
-		$cache = new $class($this->parameters,$this->options);
+		$cache = new $class($this->parameters,$this->options,$this->switch);
 		return $cache;
 	}
 

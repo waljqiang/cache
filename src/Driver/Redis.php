@@ -8,9 +8,11 @@ use Predis\Client;
 
 class Redis extends Cache implements CacheInterface{
 
-	public function __construct($parameters = [],$options = []){
+	public function __construct($parameters = [],$options = [],$switch){
+		$this->switch = $switch;
 		try{
-			$this->handler = new Client($parameters,$options);
+			if($this->switch)
+				$this->handler = new Client($parameters,$options);
 		}catch(\Exception $e){
 			throw new CacheException($e->getMessage(),CacheException::CACHERROR);
 		}
@@ -26,7 +28,7 @@ class Redis extends Cache implements CacheInterface{
 	 */
 	public function get($key,$default = null){
 		try{
-			return $this->handler->get($key) ? unserialize($this->handler->get($key)) : $default;
+			return $this->switch ? $this->handler->get($key) ? unserialize($this->handler->get($key)) : $default : null;
 		}catch(\Exception $e){
 			throw new CacheException($e->getMessage(),CacheException::CACHERROR);
 		}
@@ -45,10 +47,13 @@ class Redis extends Cache implements CacheInterface{
 	 */
 	public function set($key,$value,$ttl = null){
 		try{
+			$rs = true;
 			$value = serialize($value);
-			$result = $ttl ? $this->handler->setex($key,$ttl,$value) : $this->handler->set($key,$value);
-
-			return 'OK' == $result->getPayload() ? true : false;
+			if($this->switch){
+				$result = $ttl ? $this->handler->setex($key,$ttl,$value) : $this->handler->set($key,$value);
+				$rs = 'OK' == $result->getPayload() ? true : false;
+			}
+			return $rs;
 		}catch(\Exception $e){
 			throw new CacheException($e->getMessage(),CacheException::CACHERROR);
 		}
@@ -63,7 +68,7 @@ class Redis extends Cache implements CacheInterface{
 	 */
 	public function delete($key){
 		try{
-			return (bool) $this->handler->del($key);
+			return $this->switch ? (bool) $this->handler->del($key) : true;
 		}catch(\Exception $e){
 			throw new CacheException($e->getMessage(),CacheException::CACHERROR);
 		}
@@ -83,13 +88,13 @@ class Redis extends Cache implements CacheInterface{
      */
     public function getMultiple($keys, $default = null){
     	try{
-    		return array_map(function($value) use ($default){
+    		return $this->switch ? array_map(function($value) use ($default){
     			return $value ? unserialize($value) : $default;
     		},$this->handler->pipeline(function($pipe) use ($keys){
     			foreach ($keys as $key) {
     				$pipe->get($key);
     			}
-    		}));
+    		})) : array_combine($keys,array_fill(0,count($keys),null));
     	}catch(\Exception $e){
 			throw new CacheException($e->getMessage(),CacheException::CACHERROR);
 		}
@@ -112,21 +117,23 @@ class Redis extends Cache implements CacheInterface{
     public function setMultiple($values, $ttl = null){
     	try{
     		$rs = true;
-    		$results = $this->handler->pipeline(function($pipe) use ($values,$ttl){
-    			foreach ($values as $key => $value) {
-    				$ttl ? $pipe->setex($key,$ttl,$value) : $pipe->set($key,$value);
-    			}
-    		});
+    		if($this->switch){
+	    		$results = $this->handler->pipeline(function($pipe) use ($values,$ttl){
+	    			foreach ($values as $key => $value) {
+	    				$ttl ? $pipe->setex($key,$ttl,$value) : $pipe->set($key,$value);
+	    			}
+	    		});
 
-    		//某个设置失败回滚
-    		foreach ($results as $result) {
-    			if('OK' != $result->getPayload()){
-    				$this->deleteMultiple(array_keys($values));
-    				$rs = false;
-    				break;
-    			}
-    		}
-    		return $rs;
+	    		//某个设置失败回滚
+	    		foreach ($results as $result) {
+	    			if('OK' != $result->getPayload()){
+	    				$this->deleteMultiple(array_keys($values));
+	    				$rs = false;
+	    				break;
+	    			}
+	    		}
+	    	}
+	    	return $rs;
     	}catch(\Exception $e){
 			throw new CacheException($e->getMessage(),CacheException::CACHERROR);
 		}
@@ -145,11 +152,12 @@ class Redis extends Cache implements CacheInterface{
      */
     public function deleteMultiple($keys){
     	try{
-    		$this->handler->pipeline(function($pipe) use ($keys){
-    			foreach ($keys as $key) {
-    				$pipe->del($key);
-    			}
-    		});
+    		if($this->switch)
+	    		$this->handler->pipeline(function($pipe) use ($keys){
+	    			foreach ($keys as $key) {
+	    				$pipe->del($key);
+	    			}
+	    		});
     		return true;
     	}catch(\Exception $e){
 			throw new CacheException($e->getMessage(),CacheException::CACHERROR);
@@ -164,8 +172,12 @@ class Redis extends Cache implements CacheInterface{
 	 */
 	public function clear(){
 		try{
-			$result = $this->handler->flushdb();
-			return 'OK' == $result->getPayload() ? true : false;
+			$rs = true;
+			if($this->switch){
+				$result = $this->handler->flushdb();
+				$rs = 'OK' == $result->getPayload() ? true : false;
+			}
+			return $rs;
 		}catch(\Exception $e){
 			throw new CacheException($e->getMessage(),CacheException::CACHERROR);
 		}
@@ -180,15 +192,16 @@ class Redis extends Cache implements CacheInterface{
 	 */
 	public function has($key){
 		try{
-			return (bool) $this->handler->exists($key);
+			return $this->switch ? (bool) $this->handler->exists($key) : false;
 		}catch(\Exception $e){
 			throw new CacheException($e->getMessage(),CacheException::CACHERROR);
 		}
 	}
 
 	public function __call($method, $args){
-		if($this->handler->getProfile()->supportsCommand($method)){
+		if($this->switch && $this->handler->getProfile()->supportsCommand($method)){
 			return call_user_func_array(array($this->handler, $method), $args);
 		}
+		return null;
 	}
 }

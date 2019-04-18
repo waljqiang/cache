@@ -4,6 +4,7 @@
 * 支持常用缓存。
 * 目前仅提供redis缓存方式，redis缓存使用predis/predis，github地址:https://github.com/nrk/predis,packagelist地址:https://packagist.org/packages/predis/predis。
 * 可自行扩展使用自己的缓存类
+* 支持缓存开关
 
 ## 使用
 * redis作为缓存使用
