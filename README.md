@@ -33,7 +33,7 @@ $config = [
 ```
     3.获取缓存实例
 ```
-    $cache = Nova\Cache\Cache::getInstance($config['type'],$config['parameters'],$config['options']);
+    $cache = Nova\Cache\Cache::getInstance($config['type'],$config['parameters'],$config['options'],true);
 ```
 
     4.按照predis/predis文档调用相关方法即可
