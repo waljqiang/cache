@@ -2,8 +2,15 @@
 ## Features
     
 * 支持常用缓存。
-* 目前仅提供redis缓存方式，redis缓存使用predis/predis，github地址:https://github.com/nrk/predis,packagelist地址:https://packagist.org/packages/predis/predis。
+
+* 目前仅提供redis缓存方式，redis缓存使用predis/predis，
+
+[github地址](https://github.com/nrk/predis):https://github.com/nrk/predis.
+
+[packagelist地址](https://packagist.org/packages/predis/predis):https://packagist.org/packages/predis/predis.
+
 * 可自行扩展使用自己的缓存类
+
 * 支持缓存开关
 
 ## 使用
@@ -21,9 +28,10 @@ $config = [
     'type' => 'redis',
     'parameters' => [
         'scheme' => 'tcp',
-        'host' => '192.168.111.188',
+        'host' => '127.0.0.1',
         'port' => 6379,
-        'database' => 1
+        'database' => 1,
+        'password' => '1f494c4e0df9b837dbcc82eebed35ca3f2ed3fc5f6428d75bb542583fda2170f'
     ],
     'options' => [
         'profile' => '2.8',

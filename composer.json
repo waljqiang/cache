@@ -2,10 +2,6 @@
     "name": "waljqiang/cache",
     "description": "The driver for cache",
     "type": "library",
-    "require": {
-        "cache": "1.0",
-        "predis/predis": "^v1.1"
-    },
     "license": "MIT",
     "authors": [
         {
